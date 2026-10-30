@@ -9,7 +9,7 @@ import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer,
   Tooltip, XAxis, YAxis
 } from "recharts";
-import { supabase, supabaseConfigured } from "./supabase";
+import { supabase, supabaseConfigured, supabaseConfigStatus } from "./supabase";
 
 const STATIONS = [
   {id:"ST1",name:"Loading"},{id:"ST2",name:"Taping"},
@@ -131,7 +131,7 @@ function App(){
     if(!item.reason)return;setSat(x=>({...x,events:[...x.events,item]}));setEventDraft(null);}
   const filtered=records.filter(r=>(filter==="All"||r.status===filter)&&`${r.project} ${r.machine} ${r.customer} ${r.engineer}`.toLowerCase().includes(query.toLowerCase()));
   const allStats=useMemo(()=>records.reduce((a,r)=>{const m=calculate(r);a.count++;a.good+=Number(r.good||0);a.failed+=Number(r.failed||0);a.dt+=m.dt;a.pass+=acceptance(r,m).pass?1:0;return a;},{count:0,good:0,failed:0,dt:0,pass:0}),[records]);
-  if(!supabaseConfigured)return <div className="auth-shell"><div className="auth-card"><div className="brand-mark">SAT<span>R&R</span></div><h1>Supabase configuration required</h1><p className="muted">Create a <code>.env</code> file using the supplied Supabase project URL and publishable key, then restart the development server.</p><pre>VITE_SUPABASE_URL=…{"\\n"}VITE_SUPABASE_PUBLISHABLE_KEY=…</pre></div></div>;
+  if(!supabaseConfigured)return <div className="auth-shell"><div className="auth-card"><div className="brand-mark">SAT<span>R&R</span></div><h1>Supabase configuration required</h1><p className="muted">The app did not receive a valid Supabase URL and publishable key. Configure the variables in the project root or hosting build settings, then restart/rebuild the app.</p><pre>{`VITE_SUPABASE_URL=${supabaseConfigStatus.hasUrl ? " detected" : " MISSING"}\nVITE_SUPABASE_PUBLISHABLE_KEY=${supabaseConfigStatus.hasPublishableKey ? " detected" : " MISSING"}\nURL format=${supabaseConfigStatus.urlLooksValid ? " valid" : " invalid (must start with https://)"}`}</pre><p className="muted">Local: put these variables in the .env file beside package.json and restart npm run dev. Netlify: add them in Site configuration → Environment variables, then trigger a new deploy.</p></div></div>;
   if(!session)return <Auth onLogin={setSession}/>;
   const nav=[["Dashboard",LayoutDashboard],["New SAT",FilePlus2],["Historical SATs",History],["Analysis",BarChart3],["Actions",Wrench]];
   const chartData=records.slice(0,12).reverse().map(r=>({name:(r.project||"SAT").slice(0,12),good:Number(r.good||0),failed:Number(r.failed||0)}));
